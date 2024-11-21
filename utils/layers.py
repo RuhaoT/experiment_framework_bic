@@ -7,6 +7,8 @@ behavioral classes.
 Example:
 
 BTSP_layer = BTSPLayer(input_dim=10, memory_neurons=5, fq=0.5, fw=0.5)
+
+TODO(Ruhao Tian): Make layers independent to tensor type.
 """
 
 from dataclasses import dataclass
@@ -103,7 +105,7 @@ class TopKLayer(LayerForward):
         selected_values, selected_indices = torch.topk(
             input_data, self.top_k, dim=-1, sorted=False
         )
-        output_data = torch.zeros_like(input_data)
+        output_data = torch.zeros_like(input_data, dtype=input_data.dtype)
         output_data.scatter_(-1, selected_indices, selected_values)
         return output_data
 
@@ -118,8 +120,7 @@ class StepLayerParams:
 class StepLayer(LayerForward):
     """
     This is the class for the step layer.
-    
-    TODO(Ruhao Tian): make this layer type independent.
+
     """
 
     def __init__(self, params: StepLayerParams) -> None:
@@ -132,7 +133,11 @@ class StepLayer(LayerForward):
         """
         This is the method that performs the forward pass.
         """
-        return input_data > self.threshold
+        return torch.where(
+            input_data > self.threshold,
+            torch.tensor(1),
+            torch.tensor(0),
+        ).to(input_data.dtype).to(input_data.device)
 
 
 @dataclass
@@ -157,7 +162,7 @@ class RectifierLayer(LayerForward):
         """
         This is the method that performs the forward pass.
         """
-        output_data = torch.zeros_like(input_data)
+        output_data = torch.zeros_like(input_data, dtype=input_data.dtype)
         output_data[input_data > self.threshold] = input_data[
             input_data > self.threshold
         ]
@@ -172,6 +177,7 @@ class FlyHashingLayerParams:
     output_dim: int
     sparsity: float
     device: str
+    dtype: torch.dtype = torch.float
 
 
 class FlyHashingLayer(LayerForward, LayerWeightReset):
@@ -187,13 +193,14 @@ class FlyHashingLayer(LayerForward, LayerWeightReset):
         self.output_dim = params.output_dim
         self.sparsity = params.sparsity
         self.device = params.device
+        self.dtype = params.dtype
         self.weight_reset()
 
     def forward(self, input_data: torch.Tensor) -> torch.Tensor:
         """
         This is the method that performs the forward pass.
         """
-        output_data = torch.matmul(input_data, self.weights.float())
+        output_data = torch.matmul(input_data, self.weights.to(input_data.dtype))
         return output_data
 
     def weight_reset(self, *args, **kwargs) -> None:
@@ -203,7 +210,7 @@ class FlyHashingLayer(LayerForward, LayerWeightReset):
         self.weights = (
             torch.rand(self.input_dim, self.output_dim, device=self.device)
             < self.sparsity
-        )
+        ).to(self.dtype)
 
 
 @dataclass
@@ -213,7 +220,8 @@ class HebbianLayerParams:
     input_dim: int
     output_dim: int
     device: str
-    binary_sparse: bool = False  # broken, keep false
+    # binary_sparse: bool = False  # broken, keep false for now
+    dtype: torch.dtype = torch.float
 
 
 class HebbianLayer(LayerForward, LayerLearn, LayerWeightReset):
@@ -222,6 +230,8 @@ class HebbianLayer(LayerForward, LayerLearn, LayerWeightReset):
 
     TODO(Ruhao Tian): Fix the weight saturation issue of binary sparse weights.
     ? Shall we add normalization to the weights?
+    TODO(Ruhao Tian): Before fixing the binary sparse weights, make the layer
+    independent to other types of tensors.
     """
 
     def __init__(self, params: HebbianLayerParams) -> None:
@@ -231,15 +241,16 @@ class HebbianLayer(LayerForward, LayerLearn, LayerWeightReset):
         self.input_dim = params.input_dim
         self.output_dim = params.output_dim
         self.device = params.device
-        self.binary_sparse = params.binary_sparse
+        self.binary_sparse = False
         self.weights = None
+        self.dtype = params.dtype
         self.weight_reset()
 
     def forward(self, input_data: torch.Tensor) -> torch.Tensor:
         """
         This is the method that performs the feedback pass.
         """
-        output_data = torch.matmul(input_data.float(), self.weights.float())
+        output_data = torch.matmul(input_data, self.weights.to(input_data.dtype))
         return output_data
 
     def learn(self, training_data: List) -> None:
@@ -281,7 +292,7 @@ class HebbianLayer(LayerForward, LayerLearn, LayerWeightReset):
         """
         self.weights = torch.zeros(
             self.input_dim, self.output_dim, device=self.device
-        ).float()
+        ).to(self.dtype)
         if self.binary_sparse:
             self.weights = self.weights.bool()
 
@@ -295,10 +306,14 @@ class BTSPLayerParams:
     fq: float
     fw: float
     device: str
+    # dtype: torch.dtype = torch.float # not available for now
+    # due to the nature of the layer, the dtype is bool
 
 
 class BTSPLayer(LayerForward, LayerLearn, LayerLearnForward, LayerWeightReset):
     """This is the class for BTSP layer.
+    
+    TODO(Ruhao Tian): make this layer type independent.
 
     Attributes:
         input_dim (int): The input dimension.
@@ -317,13 +332,14 @@ class BTSPLayer(LayerForward, LayerLearn, LayerLearnForward, LayerWeightReset):
         self.fq = params.fq
         self.fw = params.fw
         self.device = params.device
+        self.dtype = torch.bool
         self.weights = None
         self.connection_matrix = None
         self.weight_reset()
 
     def forward(self, input_data: torch.Tensor) -> torch.Tensor:
         """Perform the forward pass."""
-        output_data = torch.matmul(input_data.float(), self.weights.float())
+        output_data = torch.matmul(input_data, self.weights.to(input_data.dtype))
         return output_data
 
     def learn_and_forward(self, training_data: torch.Tensor) -> torch.Tensor:
@@ -402,14 +418,14 @@ class BTSPLayer(LayerForward, LayerLearn, LayerLearnForward, LayerWeightReset):
         self.weights = (
             torch.rand(self.input_dim, self.memory_neurons, device=self.device)
             < self.fq
-        ).bool()
+        ).to(self.dtype)
         if "weight" in kwargs:
             if kwargs["weight"] is not None:
                 self.weights = kwargs["weight"]
         self.connection_matrix = (
             torch.rand((self.input_dim, self.memory_neurons), device=self.device)
             < self.fw
-        ).bool()
+        ).to(self.dtype)
         return
 
 
@@ -420,6 +436,7 @@ class PseudoinverseLayerParams:
     input_dim: int
     output_dim: int
     device: str
+    dtype: torch.dtype = torch.float
 
 
 class PseudoinverseLayer(
@@ -442,6 +459,7 @@ class PseudoinverseLayer(
         self.input_dim = params.input_dim
         self.output_dim = params.output_dim
         self.device = params.device
+        self.dtype = params.dtype
         self.weight_forward = None
         self.weight_feedback = None
         self.weight_reset()
@@ -453,7 +471,7 @@ class PseudoinverseLayer(
         A sign function is applied to the output data.
         """
 
-        output_data = torch.matmul(input_data.float(), self.weight_forward.float())
+        output_data = torch.matmul(input_data, self.weight_forward.to(input_data.dtype))
         return torch.sign(output_data)
 
     def feedback(self, upper_feedback_data: torch.Tensor) -> torch.Tensor:
@@ -464,7 +482,7 @@ class PseudoinverseLayer(
         """
 
         output_data = torch.matmul(
-            upper_feedback_data.float(), self.weight_feedback.float()
+            upper_feedback_data, self.weight_feedback.to(upper_feedback_data.dtype)
         )
         return torch.sign(output_data)
 
@@ -503,8 +521,8 @@ class PseudoinverseLayer(
 
         with torch.no_grad():
             # calculate pseudo-inverse matrix
-            presynaptic_data = training_data[0].transpose(0, 1).float()
-            postsynaptic_data = training_data[1].transpose(0, 1).float()
+            presynaptic_data = training_data[0].transpose(0, 1)
+            postsynaptic_data = training_data[1].transpose(0, 1)
             pattern_num = training_data[2]
 
             presynaptic_data_pinv = torch.pinverse(presynaptic_data)
@@ -520,8 +538,8 @@ class PseudoinverseLayer(
                 postsynaptic_data_pinv[:pattern_num, :],
             ).transpose(0, 1)
         # scale the weights
-        self.weight_forward = self.weight_forward / pattern_num
-        self.weight_feedback = self.weight_feedback / pattern_num
+        self.weight_forward = (self.weight_forward / pattern_num).to(self.dtype)
+        self.weight_feedback = (self.weight_feedback / pattern_num).to(self.dtype)
 
     def learn_and_forward(self, training_data):
         """Perform the learning and forward pass.
