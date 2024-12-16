@@ -160,8 +160,13 @@ class CudaDistributedExperiment(AutoExperiment):
         """
         Map the experiment process.
         """
-        with torch.cuda.device(device):
+        if device == "cpu":
+            # disable CUDA for this process
+            os.environ["CUDA_VISIBLE_DEVICES"] = ""
             self.experiment_interface.execute_experiment_process(parameters, dataset)
+        else:
+            with torch.cuda.device(device):
+                self.experiment_interface.execute_experiment_process(parameters, dataset)
         # return the device to the device queue
         self.device_queue.put(device)
 
