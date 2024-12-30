@@ -416,7 +416,7 @@ class BTSPLayer(LayerForward, LayerLearn, LayerLearnForward, LayerWeightReset):
     def weight_reset(self, *args, **kwargs) -> None:
         """Reset the weights."""
         self.weights = (
-            torch.rand(self.input_dim, self.memory_neurons, device=self.device)
+            torch.rand((self.input_dim, self.memory_neurons), device=self.device)
             < self.fq
         ).to(self.dtype)
         if "weight" in kwargs:
