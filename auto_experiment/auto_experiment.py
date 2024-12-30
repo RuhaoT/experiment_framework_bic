@@ -98,7 +98,8 @@ class SimpleBatchExperiment(AutoExperiment):
         Evaluate the experiment.
         """
         self.experiment_interface.summarize_results()
-        
+
+# TODO(Ruhao Tian): Hide multiprocessing shared data handling from the user level
 class CudaDistributedExperiment(AutoExperiment):
     """
     This is the class for CUDA distributed experiments.
