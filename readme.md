@@ -1,4 +1,4 @@
-# A Experiment Automation Framework for Brain-Inspired Computing
+# An Experiment Automation Framework for Brain-Inspired Computing
 
 This repository contains the source code for the Experiment Automation Framework (EAF) for Brain-Inspired Computing. A personal project for improving my daily research efficiency.
 

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# TODO(Ruhao Tian): choose a better name
+name = "experiment-framework-bic"
+version = "0.1.0"
+description = "Experiment Automation Framework (EAF) for Brain-Inspired Computing. A personal project for improving my daily research efficiency."
+readme = "readme.md"
+license = { file = "LICENSE.txt" }
+# use dynamic dependencies
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+# TODO(Ruhao Tian): better way to handle dependencies
+# TODO(Ruhao Tian): optional dependencies
+dependencies = {file = "requirements.txt"}
+
+[tool.setuptools.packages.find]
+exclude = ["testing"]

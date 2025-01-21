@@ -1,8 +1,8 @@
 import numpy as np
 import torch.multiprocessing as mp
+
 import auto_experiment.auto_experiment as auto_experiment
 import auto_experiment.cuda_distributed_experiment as cuda_distributed_experiment
-
 
 manager = mp.Manager()
 

@@ -1,3 +1,6 @@
-pyarrow==17.0.0
-torch==2.4.0
-tqdm==4.66.5
+cupy_cuda12x~=13.3.0
+numpy~=2.2.2
+pyarrow~=17.0.0
+termcolor~=2.5.0
+torch~=2.4.0
+tqdm~=4.66.5

@@ -3,3 +3,7 @@ __pycache__/
 
 # pytest cache
 .pytest_cache/
+
+# distribution
+dist/
+*.egg-info/
