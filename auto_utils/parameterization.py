@@ -2,8 +2,10 @@
 
 """
 
+import os
 import itertools
 import dataclasses
+import pandas as pd
 
 
 def iterate_dict(dictionary: dict):
@@ -125,9 +127,27 @@ def recursive_iterate_dataclass(dataclass_instance: dataclasses.dataclass):
 
     return recursive_dataclass_combinations(dataclass_instance)
 
+def set_experiment_index(param_list: list[dataclasses.dataclass], start_index: int = 0):
+    """Given a list of dataclasses, check and set the experiment index for each dataclass."""
+    for index, param in enumerate(param_list):
+        if not hasattr(param, "experiment_index") or isinstance(getattr(param, "experiment_index"), int):
+            setattr(param, "experiment_index", index + start_index)
+        else:
+            # if the param has experiment index but not int, raise an error
+            raise ValueError(f"experiment index should be an integer, but got {getattr(param, 'experiment_index')}")
+    return param_list
+
+def save_dataclasses_to_csv(param_list: list[dataclasses.dataclass], path:str, filename: str="params.csv"):
+    """Save the parameters to a csv file."""
+    # convert the dataclass to a list of dictionaries
+    param_dict_list = [dataclasses.asdict(param) for param in param_list]
+    # save the list of dictionaries to a csv file
+    full_path = os.path.join(path, filename)
+    pd.DataFrame(param_dict_list).to_csv(full_path, index=False)
 
 # provide a module test
 if __name__ == "__main__":
+    print("Please use pytest instead.")
     test_dict_with_subdict = {
         "a": [1, 2],
         "b": {"c": [3, 4], "d": [5, 6]},
