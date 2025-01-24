@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import torch.multiprocessing as mp
 
 import auto_experiment.auto_experiment as auto_experiment
@@ -20,6 +21,13 @@ class experiment_interface(auto_experiment.ExperimentInterface):
         return "dataset"
     
     def execute_experiment_process(self, parameters, dataset):
+        
+        # try re-initializing the CUDA device
+        if not torch.cuda.is_available():
+            device = "cpu"
+        else:
+            # for debugging
+            device = "cuda:" + str(torch.cuda.current_device())
         
         self.results.append(parameters)
         
