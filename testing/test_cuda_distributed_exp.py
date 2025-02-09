@@ -33,8 +33,11 @@ class experiment_interface(auto_experiment.ExperimentInterface):
         
 def test_cuda_distributed_experiment():
     
-    experiment = cuda_distributed_experiment.CudaDistributedExperiment(experiment_interface(), cuda="max")
-    experiment.run()
-    experiment.evaluate()
+    cuda_condition = ["none", "max", [0]]
     
-    assert experiment.experiment_interface.results == experiment.experiment_interface.params
+    for cuda in cuda_condition:
+        experiment = cuda_distributed_experiment.CudaDistributedExperiment(experiment_interface(), cuda=cuda)
+        experiment.run()
+        experiment.evaluate()
+        
+        assert experiment.experiment_interface.results == experiment.experiment_interface.params

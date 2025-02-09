@@ -2,7 +2,6 @@ import os
 import random
 import signal
 import sys
-from abc import ABC, abstractmethod
 
 import cupy
 import termcolor
@@ -13,8 +12,11 @@ import tqdm
 from . import auto_experiment
 
 
-def _set_device(device, backend):
-    """Set the device for a specific process."""
+def _set_device(device, backend) -> int:
+    """Set the device for a specific process.
+    
+    Return the device index in terms of process.
+    """
     if device == "cpu":
         # disable CUDA for this process
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -26,8 +28,10 @@ def _set_device(device, backend):
             termcolor.cprint(
                 "Please make sure your code is agnostic.", "yellow", attrs=["bold"]
             )
+        return 0
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = str(device)
+        return device
 
 
 def _map_experiment(
@@ -37,14 +41,14 @@ def _map_experiment(
     Map the experiment process.
     """
     # set the device
-    _set_device(device=device, backend=backend)
+    device_id = _set_device(device=device, backend=backend)
 
     # if parameters is a list, then it is a batch experiment
     if isinstance(parameters, list):
 
         # create a tqdm progress bar at device index position
         for parameter in tqdm.tqdm(
-            parameters, position=device, desc=f"Device {device}", mininterval=1
+            parameters, position=device_id, desc=f"Device {device}", mininterval=1
         ):
             exp_func(parameter, dataset)
     else:
@@ -137,7 +141,7 @@ class CudaDistributedExperiment(auto_experiment.AutoExperiment):
 
         return selection
 
-    def _sigint_handler(self, sig, frame):
+    def _sigint_handler(self):
         """
         Signal handler for SIGINT.
         """
