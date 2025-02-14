@@ -141,7 +141,7 @@ class CudaDistributedExperiment(auto_experiment.AutoExperiment):
 
         return selection
 
-    def _sigint_handler(self):
+    def _sigint_handler(self, sig, frame):
         """
         Signal handler for SIGINT.
         """
