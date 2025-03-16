@@ -1,5 +1,6 @@
 cupy_cuda12x
 numpy
+pandas
 pyarrow
 termcolor
 torch
