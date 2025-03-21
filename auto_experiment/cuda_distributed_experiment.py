@@ -33,6 +33,11 @@ def _set_device(device, backend) -> int:
         os.environ["CUDA_VISIBLE_DEVICES"] = str(device)
         return device
 
+def _map_data_loading(data_queue, data_function):
+    """Map the data loading"""
+    
+    data_queue.put(data_function())
+    
 
 def _map_experiment(
     parameters, dataset, device, backend: str, device_queue: mp.Queue, exp_func
@@ -97,7 +102,6 @@ class CudaDistributedExperiment(auto_experiment.AutoExperiment):
 
         self.experiment_interface = experiment_interface
         self.parameter_group = self.experiment_interface.load_parameters()
-        self.dataset = self.experiment_interface.load_dataset()
 
         # prepare for multiprocessing
         # create a device Queue act as GPU pool
@@ -165,6 +169,19 @@ class CudaDistributedExperiment(auto_experiment.AutoExperiment):
         # TODO(Ruhao Tian): Implement the CUDA distributed experiment.
         # set the signal handler
         signal.signal(signal.SIGINT, self._sigint_handler)
+        
+        # spawn an isolated process to load dataset
+        # loading dataset in parent process may cause deadlock
+        # an issue with OpenMP backend in NumPy & PyTorch
+        data_queue = mp.Queue()
+        data_process = mp.Process(
+            target=_map_data_loading,
+            args=(data_queue, self.experiment_interface.load_dataset),
+        )
+        data_process.start()
+        self.dataset = data_queue.get()
+        data_process.join()
+        
 
         # split the parameter group uniformly to each device
         # shuffle the parameter group
