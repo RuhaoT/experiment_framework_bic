@@ -144,11 +144,8 @@ def save_dataclasses_to_csv(param_list: list[dataclasses.dataclass], path:str, f
     # convert the dataclass to a list of dictionaries
     param_dict_list = [dataclasses.asdict(param) for param in param_list]
     
-    # convert the dict to json for normalization
-    param_json_list = [json.dumps(param_dict) for param_dict in param_dict_list]
-    
-    # normalize the json to a dataframe
-    param_df = pd.json_normalize(param_json_list)
+    # normalize the dict to a dataframe
+    param_df = pd.json_normalize(param_dict_list)
     
     # save the dataframe to csv
     full_path = os.path.join(path, filename)
