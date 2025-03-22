@@ -2,9 +2,11 @@
 
 """
 
-import os
-import itertools
 import dataclasses
+import itertools
+import json
+import os
+
 import pandas as pd
 
 
@@ -141,10 +143,17 @@ def save_dataclasses_to_csv(param_list: list[dataclasses.dataclass], path:str, f
     """Save the parameters to a csv file."""
     # convert the dataclass to a list of dictionaries
     param_dict_list = [dataclasses.asdict(param) for param in param_list]
-    # save the list of dictionaries to a csv file
+    
+    # convert the dict to json for normalization
+    param_json_list = [json.dumps(param_dict) for param_dict in param_dict_list]
+    
+    # normalize the json to a dataframe
+    param_df = pd.json_normalize(param_json_list)
+    
+    # save the dataframe to csv
     full_path = os.path.join(path, filename)
-    pd.DataFrame(param_dict_list).to_csv(full_path, index=False)
-
+    param_df.to_csv(full_path, index=False)
+    return full_path
 
 
 # provide a module test
