@@ -1,32 +1,35 @@
 import dataclasses
 import auto_utils.parameterization as parameterization
+import auto_utils.combiparam as combiparam
 
 def test_iterate_dict():
     test_dict = {
-        "a": [1, 2],
-        "b": [3, 4],
+        "a": combiparam.Combiparam([1, 2]),
+        "b": combiparam.Combiparam([3, 4]),
+        "c": list([5,6]), # this should not be combined
     }
     assert parameterization.iterate_dict(test_dict) == [
-        {"a": 1, "b": 3},
-        {"a": 1, "b": 4},
-        {"a": 2, "b": 3},
-        {"a": 2, "b": 4},
+        {"a": 1, "b": 3, "c": [5,6]},
+        {"a": 1, "b": 4, "c": [5,6]},
+        {"a": 2, "b": 3, "c": [5,6]},
+        {"a": 2, "b": 4, "c": [5,6]},
     ]
 
 def test_recursive_iterate_dict():
     test_dict_with_subdict = {
-        "a": [1, 2],
-        "b": {"c": [3, 4], "d": [5, 6]},
+        "a": combiparam.Combiparam([1, 2]),
+        "b": {"c": combiparam.Combiparam([3, 4]), "d": combiparam.Combiparam([5, 6])},
+        "e": [7, 8]
     }
     assert parameterization.recursive_iterate_dict(test_dict_with_subdict) == [
-        {"a": 1, "b": {"c": 3, "d": 5}},
-        {"a": 1, "b": {"c": 3, "d": 6}},
-        {"a": 1, "b": {"c": 4, "d": 5}},
-        {"a": 1, "b": {"c": 4, "d": 6}},
-        {"a": 2, "b": {"c": 3, "d": 5}},
-        {"a": 2, "b": {"c": 3, "d": 6}},
-        {"a": 2, "b": {"c": 4, "d": 5}},
-        {"a": 2, "b": {"c": 4, "d": 6}},
+        {"a": 1, "b": {"c": 3, "d": 5}, "e": [7, 8]},
+        {"a": 1, "b": {"c": 3, "d": 6}, "e": [7, 8]},
+        {"a": 1, "b": {"c": 4, "d": 5}, "e": [7, 8]},
+        {"a": 1, "b": {"c": 4, "d": 6}, "e": [7, 8]},
+        {"a": 2, "b": {"c": 3, "d": 5}, "e": [7, 8]},
+        {"a": 2, "b": {"c": 3, "d": 6}, "e": [7, 8]},
+        {"a": 2, "b": {"c": 4, "d": 5}, "e": [7, 8]},
+        {"a": 2, "b": {"c": 4, "d": 6}, "e": [7, 8]},
     ]
 
 def test_recursive_iterate_dataclass():
@@ -34,24 +37,20 @@ def test_recursive_iterate_dataclass():
     @dataclasses.dataclass
     class SubDataclass:
         c: list | int
-        d: list | int
+        d: combiparam.Combiparam | int
     
     @dataclasses.dataclass
     class TestDataclass:
-        a: list | int
+        a: combiparam.Combiparam | int
         b: SubDataclass
     
-    test_dataclass = TestDataclass([1, 2], SubDataclass([3, 4], [5, 6]))
+    test_dataclass = TestDataclass(combiparam.Combiparam([1, 2]), SubDataclass([3, 4], combiparam.Combiparam([5, 6])))
     
     assert parameterization.recursive_iterate_dataclass(test_dataclass) == [
-        TestDataclass(1, SubDataclass(3, 5)),
-        TestDataclass(1, SubDataclass(3, 6)),
-        TestDataclass(1, SubDataclass(4, 5)),
-        TestDataclass(1, SubDataclass(4, 6)),
-        TestDataclass(2, SubDataclass(3, 5)),
-        TestDataclass(2, SubDataclass(3, 6)),
-        TestDataclass(2, SubDataclass(4, 5)),
-        TestDataclass(2, SubDataclass(4, 6)),
+        TestDataclass(1, SubDataclass([3,4], 5)),
+        TestDataclass(1, SubDataclass([3,4], 6)),
+        TestDataclass(2, SubDataclass([3,4], 5)),
+        TestDataclass(2, SubDataclass([3,4], 6)),
     ]
 
 def test_set_experiment_index():

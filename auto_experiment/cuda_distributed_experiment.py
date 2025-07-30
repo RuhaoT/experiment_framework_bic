@@ -1,8 +1,8 @@
+import logging
 import os
 import random
 import signal
 import sys
-import logging
 
 import cupy
 import termcolor

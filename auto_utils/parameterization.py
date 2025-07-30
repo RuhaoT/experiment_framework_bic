@@ -9,6 +9,8 @@ import os
 
 import pandas as pd
 
+from auto_utils import combiparam
+
 
 def iterate_dict(dictionary: dict):
     """This function iterates over combinations of dictionary values.
@@ -24,7 +26,7 @@ def iterate_dict(dictionary: dict):
 
     # convert single values to list
     dict_values = [
-        [value] if not isinstance(value, list) else value for value in dict_values
+        [value] if not isinstance(value, combiparam.Combiparam) else value for value in dict_values
     ]
 
     value_combinations = list(itertools.product(*dict_values))
@@ -58,7 +60,7 @@ def recursive_iterate_dict(dictionary: dict):
         values = []
 
         for key, value in subdict.items():
-            if isinstance(value, list):
+            if isinstance(value, combiparam.Combiparam):
                 keys.append(key)
                 values.append(value)
             elif isinstance(value, dict):
@@ -106,7 +108,7 @@ def recursive_iterate_dataclass(dataclass_instance: dataclasses.dataclass):
 
         for fields in dataclasses.fields(current_instance):
             value = getattr(current_instance, fields.name)
-            if isinstance(value, list):
+            if isinstance(value, combiparam.Combiparam):
                 keys.append(fields.name)
                 values.append(value)
             elif dataclasses.is_dataclass(value):

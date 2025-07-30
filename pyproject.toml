@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # TODO(Ruhao Tian): choose a better name
 name = "experiment-framework-bic"
-version = "0.1.0"
+version = "0.2.0"
 description = "Experiment Automation Framework (EAF) for Brain-Inspired Computing. A personal project for improving my daily research efficiency."
 readme = "readme.md"
 license = { file = "LICENSE.txt" }
