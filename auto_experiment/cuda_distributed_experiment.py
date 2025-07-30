@@ -2,6 +2,7 @@ import os
 import random
 import signal
 import sys
+import logging
 
 import cupy
 import termcolor
@@ -90,10 +91,15 @@ class CudaDistributedExperiment(auto_experiment.AutoExperiment):
         # check backend
         if self.backend not in ["torch", "cupy"]:
             raise ValueError("Invalid backend.")
+        
+        logging.debug(f"Backend: {self.backend}")
+        logging.debug(f"Device Selection: {str(cuda)}")
 
         # check and set the CUDA device(s)
         self.devices = []
         if cuda == "none":
+            raise NotImplementedError("CPU execution is not supported yet.")
+            # TODO: Fix the CPU issue
             self.devices = ["cpu"]
         else:
             if cuda == "max":
@@ -128,6 +134,8 @@ class CudaDistributedExperiment(auto_experiment.AutoExperiment):
             device_count = cupy.cuda.runtime.getDeviceCount()
         if device_count == 0:
             raise ValueError("No CUDA device available.")
+        
+        logging.info(f"Avaliable CUDA devices: {str(device_count)}")
 
         # check selection
         if selection is None:

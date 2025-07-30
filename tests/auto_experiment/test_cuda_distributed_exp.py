@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 import torch.multiprocessing as mp
+import pytest
+import logging
 
 import auto_experiment.auto_experiment as auto_experiment
 import auto_experiment.cuda_distributed_experiment as cuda_distributed_experiment
@@ -38,14 +40,14 @@ class experiment_interface(auto_experiment.ExperimentInterface):
         self.results.sort()
         
         self.params.sort()
-        
-def test_cuda_distributed_experiment():
+
+@pytest.mark.parametrize("cuda_condition", list(["max",[0]]))
+def test_cuda_distributed_experiment(cuda_condition):
+
+    logging.info(f"Testing with CUDA condition: {str(cuda_condition)}")
     
-    cuda_condition = ["none", "max", [0]]
-    
-    for cuda in cuda_condition:
-        experiment = cuda_distributed_experiment.CudaDistributedExperiment(experiment_interface(), cuda=cuda)
-        experiment.run()
-        experiment.evaluate()
+    experiment = cuda_distributed_experiment.CudaDistributedExperiment(experiment_interface(), cuda=cuda_condition)
+    experiment.run()
+    experiment.evaluate()
         
-        assert experiment.experiment_interface.results == experiment.experiment_interface.params
+    assert experiment.experiment_interface.results == experiment.experiment_interface.params
