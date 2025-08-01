@@ -49,3 +49,17 @@ class Combiparam:
             The item at the specified index.
         """
         return self._values[index]
+
+    def __eq__(self, other):
+        """
+        Checks if two Combiparam instances are equal.
+        
+        Args:
+            other (Combiparam): The other Combiparam instance to compare with.
+        
+        Returns:
+            bool: True if both instances have the same values, False otherwise.
+        """
+        if not isinstance(other, Combiparam):
+            return False
+        return self._values == other._values
