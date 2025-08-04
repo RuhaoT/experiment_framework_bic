@@ -9,7 +9,7 @@ import logging
 
 class Combiparam:
     
-    def __init__(self, values: list):
+    def __init__(self, values: list = []):
         """
         Initializes a Combiparam instance.
 
@@ -19,6 +19,20 @@ class Combiparam:
         if not isinstance(values, list):
             raise TypeError("Values must be a list.")
         self._values = values
+    
+    def val_info(self):
+        """
+        Return the element type of the Combiparam instance.
+        """
+        if len(self._values) == 0:
+            return "Empty Combiparam"
+        else:
+            elem_type = type(self._values[0])
+            for value in self._values:
+                if not isinstance(value, elem_type):
+                    logging.warning("Combiparam contains mixed types.")
+                    return "Mixed types"
+            return f"Element type: {elem_type.__name__}"
     
     def __repr__(self):
         """

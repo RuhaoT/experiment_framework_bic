@@ -66,7 +66,7 @@ def save_dataclass_to_json(
         filepath (str): The path to save the dataclass.
     """
     data = dataclasses.asdict(dataclass)
-    data = deserialize_combiparam_dict(data)
+    data = serialize_combiparam_dict(data)
     with open(filepath, "w", encoding=encoding) as f:
         json.dump(data, f)
         
@@ -80,8 +80,7 @@ def save_dataclass_to_toml(
         filepath (str): The path to save the dataclass.
     """
     data = dataclasses.asdict(dataclass)
-    datadict_backup = data.copy()  # Backup original data for later iteration
-    data = deserialize_combiparam_dict(data)
+    data_serialized = serialize_combiparam_dict(data)
         
     # iterate over the original data and add comments to each key
     def recursive_add_comment(current_toml_position, current_dict_position):
@@ -95,15 +94,18 @@ def save_dataclass_to_toml(
                 # Add a comment for the key indicating data type
                 key_type = type(current_dict_position[key]).__name__
                 comment = f"Type: {key_type}"
+                if isinstance(value, combiparam.Combiparam):
+                    # If the value is a Combiparam, add its type to the comment
+                    comment += f", {value.val_info()}"
                 current_toml_position[key].comment(comment)
                 logging.debug(f"Added comment for {key}: {comment}")
     
     # dump the data to a TOML structure
-    toml_data = tomlkit.dumps(data)
+    toml_data = tomlkit.dumps(data_serialized)
     toml_data = tomlkit.parse(toml_data)
     
     # Add comments to the TOML structure
-    recursive_add_comment(toml_data, datadict_backup)
+    recursive_add_comment(toml_data, data)
     
     # write the TOML data to the file
     with open(filepath, "w", encoding=encoding) as f:
@@ -149,7 +151,7 @@ def load_dataclass_from_toml(filepath: str, dataclass_type: type) -> dataclasses
 #         return {k: (v,) if not isinstance(v, (list, tuple)) else v for k, v in d.items()}
 #     return {k: [v,] for k, v in d.items()}
 
-def deserialize_combiparam_dict(d: dict) -> dict:
+def serialize_combiparam_dict(d: dict) -> dict:
     """Recursively deserializes a dictionary with Combiparam values.
 
     This function traverses a dictionary and converts any `Combiparam`
@@ -167,7 +169,7 @@ def deserialize_combiparam_dict(d: dict) -> dict:
         if isinstance(value, combiparam.Combiparam):
             deserialized_dict[key] = value._values
         elif isinstance(value, dict):
-            deserialized_dict[key] = deserialize_combiparam_dict(value)
+            deserialized_dict[key] = serialize_combiparam_dict(value)
         else:
             deserialized_dict[key] = value
     return deserialized_dict

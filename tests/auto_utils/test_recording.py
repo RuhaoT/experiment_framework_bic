@@ -34,11 +34,11 @@ def test_save_dataclasses_to_toml():
     with open(filepath, "r") as f:
         content = f.read()
 
-    expected_content = """a = [1, 2] # Type: Combiparam
+    expected_content = """a = [1, 2] # Type: Combiparam, Element type: int
 
 [b]
 c = [3, 4] # Type: list
-d = [5, 6] # Type: Combiparam
+d = [5, 6] # Type: Combiparam, Element type: int
 """
     assert (
         content == expected_content
@@ -93,16 +93,16 @@ def test_deserialize_combiparam_dict():
         "b": {"c": [3, 4], "d": 5, "e": {"f": [6, 7]}},
         "g": [8, 9],
     }
-    assert recording.deserialize_combiparam_dict(nested_dict) == expected_nested
+    assert recording.serialize_combiparam_dict(nested_dict) == expected_nested
 
     # Test with a flat dictionary
     flat_dict = {"a": combiparam.Combiparam([1, 2]), "b": 3}
     expected_flat = {"a": [1, 2], "b": 3}
-    assert recording.deserialize_combiparam_dict(flat_dict) == expected_flat
+    assert recording.serialize_combiparam_dict(flat_dict) == expected_flat
 
     # Test with an empty dictionary
-    assert recording.deserialize_combiparam_dict({}) == {}
+    assert recording.serialize_combiparam_dict({}) == {}
 
     # Test with no Combiparam
     no_combiparam_dict = {"a": [1, 2], "b": 3}
-    assert recording.deserialize_combiparam_dict(no_combiparam_dict) == no_combiparam_dict
+    assert recording.serialize_combiparam_dict(no_combiparam_dict) == no_combiparam_dict
