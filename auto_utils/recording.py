@@ -94,7 +94,7 @@ def save_dataclass_to_toml(
                 # Add a comment for the key indicating data type
                 key_type = type(current_dict_position[key]).__name__
                 comment = f"Type: {key_type}"
-                if isinstance(value, combiparam.Combiparam):
+                if isinstance(value, combiparam.CombiParam):
                     # If the value is a Combiparam, add its type to the comment
                     comment += f", {value.val_info()}"
                 current_toml_position[key].comment(comment)
@@ -132,7 +132,7 @@ def load_dataclass_from_toml(filepath: str, dataclass_type: type) -> dataclasses
     dataclass_result = dacite.from_dict(
         dataclass_type,
         data_dict,
-        dacite.Config(cast=[combiparam.Combiparam])
+        dacite.Config(cast=[combiparam.CombiParam])
     ) 
     
     return dataclass_result
@@ -166,7 +166,7 @@ def serialize_combiparam_dict(d: dict) -> dict:
     """
     deserialized_dict = {}
     for key, value in d.items():
-        if isinstance(value, combiparam.Combiparam):
+        if isinstance(value, combiparam.CombiParam):
             deserialized_dict[key] = value._values
         elif isinstance(value, dict):
             deserialized_dict[key] = serialize_combiparam_dict(value)

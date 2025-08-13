@@ -26,7 +26,7 @@ def iterate_dict(dictionary: dict):
 
     # convert single values to list
     dict_values = [
-        [value] if not isinstance(value, combiparam.Combiparam) else value for value in dict_values
+        [value] if not isinstance(value, combiparam.CombiParam) else value for value in dict_values
     ]
 
     value_combinations = list(itertools.product(*dict_values))
@@ -60,7 +60,7 @@ def recursive_iterate_dict(dictionary: dict):
         values = []
 
         for key, value in subdict.items():
-            if isinstance(value, combiparam.Combiparam):
+            if isinstance(value, combiparam.CombiParam):
                 keys.append(key)
                 values.append(value)
             elif isinstance(value, dict):
@@ -108,7 +108,7 @@ def recursive_iterate_dataclass(dataclass_instance: dataclasses.dataclass):
 
         for fields in dataclasses.fields(current_instance):
             value = getattr(current_instance, fields.name)
-            if isinstance(value, combiparam.Combiparam):
+            if isinstance(value, combiparam.CombiParam):
                 keys.append(fields.name)
                 values.append(value)
             elif dataclasses.is_dataclass(value):

@@ -7,7 +7,7 @@ A combiparam is also a stationary object and should not be modified after creati
 import logging
 
 
-class Combiparam:
+class CombiParam:
     
     def __init__(self, values: list = []):
         """
@@ -74,6 +74,6 @@ class Combiparam:
         Returns:
             bool: True if both instances have the same values, False otherwise.
         """
-        if not isinstance(other, Combiparam):
+        if not isinstance(other, CombiParam):
             return False
         return self._values == other._values

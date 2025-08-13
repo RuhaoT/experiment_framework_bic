@@ -4,8 +4,8 @@ import auto_utils.combiparam as combiparam
 
 def test_iterate_dict():
     test_dict = {
-        "a": combiparam.Combiparam([1, 2]),
-        "b": combiparam.Combiparam([3, 4]),
+        "a": combiparam.CombiParam([1, 2]),
+        "b": combiparam.CombiParam([3, 4]),
         "c": list([5,6]), # this should not be combined
     }
     assert parameterization.iterate_dict(test_dict) == [
@@ -17,8 +17,8 @@ def test_iterate_dict():
 
 def test_recursive_iterate_dict():
     test_dict_with_subdict = {
-        "a": combiparam.Combiparam([1, 2]),
-        "b": {"c": combiparam.Combiparam([3, 4]), "d": combiparam.Combiparam([5, 6])},
+        "a": combiparam.CombiParam([1, 2]),
+        "b": {"c": combiparam.CombiParam([3, 4]), "d": combiparam.CombiParam([5, 6])},
         "e": [7, 8]
     }
     assert parameterization.recursive_iterate_dict(test_dict_with_subdict) == [
@@ -37,14 +37,14 @@ def test_recursive_iterate_dataclass():
     @dataclasses.dataclass
     class SubDataclass:
         c: list | int
-        d: combiparam.Combiparam | int
+        d: combiparam.CombiParam | int
     
     @dataclasses.dataclass
     class TestDataclass:
-        a: combiparam.Combiparam | int
+        a: combiparam.CombiParam | int
         b: SubDataclass
     
-    test_dataclass = TestDataclass(combiparam.Combiparam([1, 2]), SubDataclass([3, 4], combiparam.Combiparam([5, 6])))
+    test_dataclass = TestDataclass(combiparam.CombiParam([1, 2]), SubDataclass([3, 4], combiparam.CombiParam([5, 6])))
     
     assert parameterization.recursive_iterate_dataclass(test_dataclass) == [
         TestDataclass(1, SubDataclass([3,4], 5)),
