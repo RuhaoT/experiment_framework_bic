@@ -97,8 +97,13 @@ def save_dataclass_to_toml(
                 if isinstance(value, combiparam.CombiParam):
                     # If the value is a Combiparam, add its type to the comment
                     comment += f", {value.val_info()}"
-                current_toml_position[key].comment(comment)
-                logging.debug(f"Added comment for {key}: {comment}")
+                # Check if the TOML object has a comment method before trying to add a comment
+                toml_value = current_toml_position[key]
+                if hasattr(toml_value, 'comment'):
+                    toml_value.comment(comment)
+                    logging.debug(f"Added comment for {key}: {comment}")
+                else:
+                    logging.debug(f"Could not add comment for {key} (type: {type(toml_value)}): {comment}")
     
     # dump the data to a TOML structure
     toml_data = tomlkit.dumps(data_serialized)

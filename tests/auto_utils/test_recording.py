@@ -19,6 +19,8 @@ def test_save_dataclasses_to_toml():
     class TestDataclass:
         a: combiparam.CombiParam | int
         b: SubDataclass
+        c: bool = True
+        d: str = "test"
 
     test_dataclass = TestDataclass(
         combiparam.CombiParam([1, 2]),
@@ -34,11 +36,13 @@ def test_save_dataclasses_to_toml():
     with open(filepath, "r") as f:
         content = f.read()
 
-    expected_content = """a = [1, 2] # Type: Combiparam, Element type: int
+    expected_content = """a = [1, 2] # Type: CombiParam, Element type: int
+c = true
+d = "test" # Type: str
 
 [b]
 c = [3, 4] # Type: list
-d = [5, 6] # Type: Combiparam, Element type: int
+d = [5, 6] # Type: CombiParam, Element type: int
 """
     assert (
         content == expected_content
